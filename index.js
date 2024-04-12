@@ -7,6 +7,10 @@ const dns = require("dns");
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Declaration for URL database and next short URL ID
+let nextShortUrlId = 1;
+const urlDatabase = {};
+
 // Middleware setup
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -88,7 +92,3 @@ app.get('/api/shorturl/:shortUrlId', (req, res) => {
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
 });
-
-// Declaration for URL database and next short URL ID
-let nextShortUrlId = 1;
-const urlDatabase = {};
