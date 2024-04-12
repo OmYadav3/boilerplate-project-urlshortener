@@ -24,7 +24,7 @@ app.get("/", function (req, res) {
 
 // URL validation function with DNS lookup
 async function isValidUrl(url) {
-  const urlPattern = /^(ftp|http|https):\/\/[^ "]+$/;
+  const urlPattern = /^(ftp|http|https):(\/|\/\/)[^ "]+$/;
 
   if (!urlPattern.test(url)) {
     return false;
