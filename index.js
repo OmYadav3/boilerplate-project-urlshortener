@@ -57,7 +57,7 @@ app.post("/api/shorturl", async function (req, res) {
 
     if (!isValid) {
       // Return a 400 status for invalid input and include the error message
-      return res.status(400).json({ error: "Invalid URL" });
+      return res.status(400).json({ error: "invalid url" });
     }
     
     // Store the original URL in the database
@@ -70,7 +70,7 @@ app.post("/api/shorturl", async function (req, res) {
     });
   } catch (error) {
     // Handle DNS lookup errors
-    return res.status(400).json({ error: "Invalid URL" });
+    return res.status(400).json({ error: "invalid url" });
   }
 });
 
