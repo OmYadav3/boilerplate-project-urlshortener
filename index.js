@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const dns = require("dns");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,23 +18,56 @@ app.get("/", function (req, res) {
   res.sendFile(process.cwd() + "/views/index.html");
 });
 
+// URL validation function with DNS lookup
+async function isValidUrl(url) {
+  const urlPattern = /^(ftp|http|https):\/\/[^ "]+$/;
+
+  if (!urlPattern.test(url)) {
+    return false;
+  }
+
+  const host = new URL(url).hostname;
+
+  try {
+    await new Promise((resolve, reject) => {
+      dns.lookup(host, (err) => {
+        if (err) {
+          reject(false); // Host not found
+        } else {
+          resolve(true); // Host found
+        }
+      });
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 // URL shortening endpoint
-app.post("/api/shorturl", function (req, res) {
+app.post("/api/shorturl", async function (req, res) {
   const originalUrl = req.body.url;
 
-  if (!isValidUrl(originalUrl)) {
-    // Return a 400 status for invalid input
-    return res.status(400).send({ error: "Invalid URL" });
+  try {
+    const isValid = await isValidUrl(originalUrl);
+
+    if (!isValid) {
+      // Return a 400 status for invalid input and include the error message
+      return res.status(400).json({ error: "Invalid URL" });
+    }
+    
+    // Store the original URL in the database
+    urlDatabase[nextShortUrlId] = originalUrl;
+    
+    // Respond with the JSON containing original_url and short_url properties
+    res.json({
+      original_url: originalUrl,
+      short_url: nextShortUrlId++
+    });
+  } catch (error) {
+    // Handle DNS lookup errors
+    return res.status(400).json({ error: "Invalid URL" });
   }
-  
-  // Store the original URL in the database
-  urlDatabase[nextShortUrlId] = originalUrl;
-  
-  // Respond with the JSON containing original_url and short_url properties
-  res.json({
-    original_url: originalUrl,
-    short_url: nextShortUrlId++
-  });
 });
 
 // Redirection endpoint for short URLs
@@ -54,12 +88,6 @@ app.get('/api/shorturl/:shortUrlId', (req, res) => {
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
 });
-
-// Validation function for URLs
-function isValidUrl(url) {
-  const urlPattern = /^(ftp|http|https):\/\/[^ "]+$/;
-  return urlPattern.test(url);
-}
 
 // Declaration for URL database and next short URL ID
 let nextShortUrlId = 1;
